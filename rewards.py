@@ -6,11 +6,23 @@ import os
 
 def automacao_rewards():
     pesquisas_hoje = []
-    print('Deseja desligar o pc após o fim das pesquisas?')
 
-    desligar_pc = int(input('1 - SIM | 2 - NÃO '))
-    if desligar_pc == 1:
-        os.system("shutdown /s /t 2400")
+    while True:
+        try:
+            print('Deseja desligar o pc após o fim das pesquisas?')
+            desligar_pc = int(input('1 - SIM | 2 - NÃO '))
+
+            if desligar_pc in [1, 2]:
+                if desligar_pc == 1:
+                    #Timer de 40 minutos para garantir que a missão de 30 minutos no edge seja cumprida
+                    os.system("shutdown /s /t 2400") 
+                break
+
+            else:
+                print('Opção inválida! Escolha 1 ou 2.')
+
+        except ValueError:
+            print('Digite apenas NÚMEROS INTEIROS.')
 
     try: 
         with open('pesquisas.json', 'r', encoding='utf-8') as arquivo:
