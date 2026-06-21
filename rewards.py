@@ -3,53 +3,60 @@ import time
 import random
 import json
 import os
+import sys
 
-def automacao_rewards():
-    pesquisas_hoje = []
+pyautogui.FAILSAFE = True 
 
+def solicitar_desligamento():
     while True:
-        try:
-            print('Deseja desligar o pc após o fim das pesquisas?')
-            desligar_pc = int(input('1 - SIM | 2 - NÃO '))
+        opcao = input('Deseja desligar o PC após o fim? (1-SIM | 2-NÃO): ').strip()
+        if opcao == '1':
+            return True
+        elif opcao == '2':
+            return False
+        print('Opção inválida!')
 
-            if desligar_pc in [1, 2]:
-                if desligar_pc == 1:
-                    #Timer de 40 minutos para garantir que a missão de 30 minutos no edge seja cumprida
-                    os.system("shutdown /s /t 2400") 
-                break
-
-            else:
-                print('Opção inválida! Escolha 1 ou 2.')
-
-        except ValueError:
-            print('Digite apenas NÚMEROS INTEIROS.')
-
-    try: 
-        with open('pesquisas.json', 'r', encoding='utf-8') as arquivo:
-            pesquisas = json.load(arquivo)
-            pesquisas_hoje = random.sample(pesquisas['termos'], k=30)
-
-    except FileNotFoundError:
-        print("Arquivo pesquisas.json não encontrado!")
-        return
-
-    print('O Script vai começar em 5 segundos...')
-    print('CLIQUE NA JANELA DO EDGE AGORA')
+def executar_pesquisas(termos):
+    print('O Script vai começar em 5 segundos... Mude para o navegador.')
     time.sleep(5)
 
-    for termo in pesquisas_hoje:
+    for i, termo in enumerate(termos, 1):
         pyautogui.hotkey('alt', 'd')
-        time.sleep(1)
-
-        pyautogui.write(termo, interval=0.1)
         time.sleep(0.5)
+        
+        pyautogui.write(termo,interval=0.1)
         pyautogui.press('enter')
 
-        espera = 15 + random.uniform(2, 10)
-        print(f'Pesquisou: {termo}. Próxima pesquisa em {espera:.1f} segundos.')
+        espera = random.uniform(15, 25)
+        print(f'[{i}/20] Pesquisado: "{termo}". Aguardando {espera:.1f}s...')
         time.sleep(espera)
 
-    print('Fim das pequisas. Aguarde a finalização do script...')
+def main():
+    if not os.path.exists('pesquisas.json'):
+        print("Erro: arquivo 'pesquisas.json' não encontrado.")
+        return
+
+    with open('pesquisas.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        termos = data.get('termos', [])
+
+    if len(termos) < 20:
+        print("Erro: O JSON precisa de pelo menos 20 termos.")
+        return
+
+    deve_desligar = solicitar_desligamento()
+    
+    try:
+        executar_pesquisas(random.sample(termos, k=20))
+        print('Concluído!')
+        
+        if deve_desligar:
+            print('Desligando em 40 minutos...')
+            os.system("shutdown /s /t 2400")
+            
+    except KeyboardInterrupt:
+        print("\nScript interrompido pelo usuário.")
+        sys.exit()
 
 if __name__ == '__main__':
-    automacao_rewards()
+    main()
